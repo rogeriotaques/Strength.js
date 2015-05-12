@@ -1,34 +1,44 @@
 @charset "utf-8";
+
 /* CSS Document */
 
-.strength_meter{
-	height:23px;
-width: 154px;
-	background:silver;
+.strength_meter {
+    height: 23px;
+    background: #ccc;
 	
 }
-.strength_meter div{
-	height:23px;
-	width:100%;
-	height:23px;
-	text-align:center;
-	color:black;
-	font-weight:bold;
-	line-height:23px;
+
+.strength_meter > div.meter_label {
+    text-align: center;
+    color: black;
+    font-weight: bold;
+    line-height: 23px;
+    height: 23px;
+    width: 100%;
 }
-.veryweak{
-	background-color: #FFA0A0;
-border-color: #F04040!important
+
+.strength_meter > div.meter_progress {
+    line-height: 23px;
+    height: 23px;
+    width: 100%;
 }
-.weak{
-background-color: #FFB78C;
-border-color: #FF853C!important;
+
+.veryweak > .meter_progress {
+    background-color: #FFA0A0 !important;
+    border-color: #F04040 !important
 }
-.medium{
-background-color: #FFEC8B;
-border-color: #FC0!important;
+
+.weak > .meter_progress {
+    background-color: #FFB78C !important;
+    border-color: #FF853C !important;
 }
-.strong{
-background-color: #C3FF88;
-border-color: #8DFF1C!important;
+
+.medium > .meter_progress {
+    background-color: #FFEC8B !important;
+    border-color: #FC0 !important;
+}
+
+.strong > .meter_progress {
+    background-color: #C3FF88 !important;
+    border-color: #8DFF1C !important;
 }

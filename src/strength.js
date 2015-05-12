@@ -1,23 +1,38 @@
 /*!
  * strength.js
+ * 
  * Original author: @aaronlumsden
  * Further changes, comments: @aaronlumsden
+ * 
+ * Enhanced by Rogerio Taques (rogerio.taques@gmail.com)
+ * Added new default options which include the ability to translate labels and password strengths.
+ * Changed options parameters becoming it more intuitive.
+ * 
+ * Version: custom 1.0
+ * 
  * Licensed under the MIT license
  */
 ;(function ( $, window, document, undefined ) {
 
     var pluginName = "strength",
+        
         defaults = {
-            strengthClass: 'strength',
+            targetClass: 'strength',
             strengthMeterClass: 'strength_meter',
-            strengthButtonClass: 'button_strength',
-            strengthButtonText: 'Show Password',
-            strengthButtonTextToggle: 'Hide Password'
+            showPasswordButtonClass: 'show_password_strength',
+            texts: {
+                showPassword: 'Show Password',
+                hidePassword: 'Hide Password',
+                strengthInitialLabel: 'Strength',
+                strengthVeryWeakLabel: 'Very weak',
+                strengthWeakLabel: 'Weak',
+                strengthMediumLabel: 'Medium',
+                strengthStrongLabel: 'Strong'
+            }
         };
 
-       // $('<style>body { background-color: red; color: white; }</style>').appendTo('head');
-
-    function Plugin( element, options ) {
+    function Plugin( element, options ) 
+    {
         this.element = element;
         this.$elem = $(this.element);
         this.options = $.extend( {}, defaults, options );
@@ -28,130 +43,133 @@
 
     Plugin.prototype = {
 
-        init: function() {
+        init: function() 
+        {
+            var $this           = this,
+                characters      = 0,
+                capitalletters  = 0,
+                loweletters     = 0,
+                number          = 0,
+                special         = 0,
+                upperCase       = new RegExp('[A-Z]'),
+                lowerCase       = new RegExp('[a-z]'),
+                numbers         = new RegExp('[0-9]'),
+                specialchars    = new RegExp('([!,%,&,@,#,$,^,*,?,_,~])');
 
-
-            var characters = 0;
-            var capitalletters = 0;
-            var loweletters = 0;
-            var number = 0;
-            var special = 0;
-
-            var upperCase= new RegExp('[A-Z]');
-            var lowerCase= new RegExp('[a-z]');
-            var numbers = new RegExp('[0-9]');
-            var specialchars = new RegExp('([!,%,&,@,#,$,^,*,?,_,~])');
-
-            function GetPercentage(a, b) {
-                    return ((b / a) * 100);
-                }
-
-                function check_strength(thisval,thisid){
-                    if (thisval.length > 8) { characters = 1; } else { characters = -1; };
-                    if (thisval.match(upperCase)) { capitalletters = 1} else { capitalletters = 0; };
-                    if (thisval.match(lowerCase)) { loweletters = 1}  else { loweletters = 0; };
-                    if (thisval.match(numbers)) { number = 1}  else { number = 0; };
-
-                    var total = characters + capitalletters + loweletters + number + special;
-                    var totalpercent = GetPercentage(7, total).toFixed(0);
-
-                    if (!thisval.length) {total = -1;}
-
-                    get_total(total,thisid);
-                }
-
-            function get_total(total,thisid){
-
-                var thismeter = $('div[data-meter="'+thisid+'"]');
-                    if (total <= 1) {
-                   thismeter.removeClass();
-                   thismeter.addClass('veryweak').html('very weak');
-                } else if (total == 2){
-                    thismeter.removeClass();
-                   thismeter.addClass('weak').html('weak');
-                } else if(total == 3){
-                    thismeter.removeClass();
-                   thismeter.addClass('medium').html('medium');
-
-                } else {
-                     thismeter.removeClass();
-                   thismeter.addClass('strong').html('strong');
-                }
-                
-                if (total == -1) { thismeter.removeClass().html('Strength'); }
+            function getPercentage(a, b) 
+            {
+                return ((b / a) * 100);
             }
 
-
-
-
-
-            var isShown = false;
-            var strengthButtonText = this.options.strengthButtonText;
-            var strengthButtonTextToggle = this.options.strengthButtonTextToggle;
-
-
-            thisid = this.$elem.attr('id');
-
-            this.$elem.addClass(this.options.strengthClass).attr('data-password',thisid).after('<input style="display:none" class="'+this.options.strengthClass+'" data-password="'+thisid+'" type="text" name="" value=""><a data-password-button="'+thisid+'" href="" class="'+this.options.strengthButtonClass+'">'+this.options.strengthButtonText+'</a><div class="'+this.options.strengthMeterClass+'"><div data-meter="'+thisid+'">Strength</div></div>');
-             
-            this.$elem.bind('keyup keydown', function(event) {
-                thisval = $('#'+thisid).val();
-                $('input[type="text"][data-password="'+thisid+'"]').val(thisval);
-                check_strength(thisval,thisid);
-                
-            });
-
-             $('input[type="text"][data-password="'+thisid+'"]').bind('keyup keydown', function(event) {
-                thisval = $('input[type="text"][data-password="'+thisid+'"]').val();
-                console.log(thisval);
-                $('input[type="password"][data-password="'+thisid+'"]').val(thisval);
-                check_strength(thisval,thisid);
-                
-            });
-
-
-
-            $(document.body).on('click', '.'+this.options.strengthButtonClass, function(e) {
-                e.preventDefault();
-
-               thisclass = 'hide_'+$(this).attr('class');
-
-
-
-
-                if (isShown) {
-                    $('input[type="text"][data-password="'+thisid+'"]').hide();
-                    $('input[type="password"][data-password="'+thisid+'"]').show().focus();
-                    $('a[data-password-button="'+thisid+'"]').removeClass(thisclass).html(strengthButtonText);
-                    isShown = false;
-
-                } else {
-                    $('input[type="text"][data-password="'+thisid+'"]').show().focus();
-                    $('input[type="password"][data-password="'+thisid+'"]').hide();
-                    $('a[data-password-button="'+thisid+'"]').addClass(thisclass).html(strengthButtonTextToggle);
-                    isShown = true;
-   
+            function checkStrength(thisval, thisid, thisopts)
+            {
+                if (!thisval.length) 
+                { 
+                    total = -1; 
                 }
+                
+                else
+                {
+                    characters      = ( thisval.length > 8 ? 1 : -1 );
+                    capitalletters  = ( thisval.match(upperCase) ? 1 : 0 );
+                    loweletters     = ( thisval.match(lowerCase) ? 1 : 0 );
+                    number          = ( thisval.match(numbers) ? 1 : 0 );
+                    special         = ( thisval.match(specialchars) ? 1 : 0 );
 
+                    var total = characters + capitalletters + loweletters + number + special,
+                        totalpercent = getPercentage(5, total).toFixed(0);
+                    
+                }
+                    
+                getTotal(total, thisid, thisopts);
+            }
 
-               
+            function getTotal(total, thisid, thisopts)
+            {
+
+                var thismeter = $('div[data-meter="'+thisid+'"].' + thisopts.strengthMeterClass);
+                
+                // remove metered classes
+                thismeter.removeClass('veryweak weak medium strong');
+                
+                if (total <= 1) 
+                {
+                   thismeter
+                       .addClass('veryweak')
+                       .find('div.meter_label').html( thisopts.texts.strengthVeryWeakLabel );
+                } 
+                else if (total == 2)
+                {
+                    thismeter
+                        .addClass('weak')
+                        .find('div.meter_label').html( thisopts.texts.strengthWeakLabel );
+                } 
+                else if(total == 3)
+                {
+                    thismeter
+                        .addClass('medium')
+                        .find('div.meter_label').html( thisopts.texts.strengthMediumLabel );
+                } 
+                else 
+                {
+                    thismeter
+                        .addClass('strong')
+                        .find('div.meter_label').html( thisopts.texts.strengthStrongLabel );
+                }
+                
+                if (total == -1) 
+                { 
+                    thismeter
+                        .removeClass('veryweak weak medium strong')
+                        .find('div.meter_label').html( thisopts.texts.strengthInitialLabel );
+                }
+            }
+
+            var isShown = false,
+                showPasswordButtonText = this.options.texts.showPasswordPassword,
+                hidePasswordButtonText = this.options.texts.hidePassword,
+                thisid  = this.$elem.attr('id'),
+                thisval = '';
+
+            this.$elem.addClass(this.options.targetClass).attr('data-password', thisid).after(
+                '<a data-password-button="'+thisid+'" href="#" class="' + $this.options.showPasswordButtonClass+'">' + $this.options.texts.showPassword + '</a>' + 
+                '<div class="' + $this.options.strengthMeterClass + '" data-meter="' + thisid + '" >' +
+                '<div class="meter_progress" ></div>' +  
+                '<div class="meter_label" >' + $this.options.texts.strengthInitialLabel + '</div>' +
+                '</div>'
+            );
+             
+            this.$elem.on('keyup keydown', function(event) 
+            {
+                thisval = $('#'+thisid).val();
+                checkStrength(thisval, thisid, $this.options);
+                
             });
 
+            $(document.body).on('click', '.' + this.options.showPasswordButtonClass, function(e) 
+            {
+                e.preventDefault();
+                var thisclass = 'hide_' + $(this).attr('class');
+                
+                $( '#' + thisid ).attr('type', ( isShown ? 'password' : 'text' ));
+                isShown = !isShown;
+            });
 
-         
-            
         },
 
-        yourOtherFunction: function(el, options) {
+        yourOtherFunction: function(el, options) 
+        {
             // some logic
         }
     };
 
     // A really lightweight plugin wrapper around the constructor,
     // preventing against multiple instantiations
-    $.fn[pluginName] = function ( options ) {
+    $.fn[pluginName] = function ( options ) 
+    {
         return this.each(function () {
-            if (!$.data(this, "plugin_" + pluginName)) {
+            if (!$.data(this, "plugin_" + pluginName)) 
+            {
                 $.data(this, "plugin_" + pluginName, new Plugin( this, options ));
             }
         });
